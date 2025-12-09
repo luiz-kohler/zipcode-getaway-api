@@ -1,3 +1,5 @@
+using System.Net;
+
 namespace API.Services.FanOutZipcodeResolver;
 
 public interface IZipcodeResolver
@@ -5,10 +7,9 @@ public interface IZipcodeResolver
     Task<ZipcodeProviderResponse?> GetZipcodeAddress(string zipcode, CancellationToken cancellationToken);
 }
 
-public class ZipcodeResolver(IEnumerable<IZipcodeProvider> providers, ILogger<ZipcodeResolver> logger) : IZipcodeResolver
+public class ZipcodeResolver(IEnumerable<IZipcodeProvider> providers) : IZipcodeResolver
 {
     private readonly IEnumerable<IZipcodeProvider> _providers = providers;
-    private readonly ILogger<ZipcodeResolver> _logger = logger;
     
     public async Task<ZipcodeProviderResponse?> GetZipcodeAddress(string zipcode, CancellationToken cancellationToken)
     {
@@ -23,16 +24,15 @@ public class ZipcodeResolver(IEnumerable<IZipcodeProvider> providers, ILogger<Zi
 
             try
             {
-                var result = await completed; 
+                var result = await completed;
                 if (result != null)
                 {
                     await linkedCts.CancelAsync();
                     return result;
                 }
             }
-            catch (Exception ex)
+            catch (KeyNotFoundException)
             {
-                _logger.LogError(ex, ex.Message);
                 throw;
             }
             finally
@@ -41,6 +41,6 @@ public class ZipcodeResolver(IEnumerable<IZipcodeProvider> providers, ILogger<Zi
             }
         }
         
-        throw new Exception();
+        throw new Exception($"No zipcode provider found for {zipcode}");
     }
 }

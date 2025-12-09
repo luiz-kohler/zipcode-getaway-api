@@ -53,7 +53,7 @@ app.MapGet("/addresses/{zipcode}", async (
         {
             return Results.NotFound("zipcode not found.");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
         }
